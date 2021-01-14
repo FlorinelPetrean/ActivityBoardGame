@@ -1,7 +1,9 @@
 import socket
+import string
 from _thread import *
 import pickle
 from game import Game
+from player import Player
 
 server = "192.168.0.106"
 port = 5555
@@ -28,7 +30,7 @@ def threaded_client(conn, p, gameId):
     reply = ""
     while True:
         try:
-            data = conn.recv(4096).decode()
+            data = pickle.loads(conn.recv(2048 * 3))
 
             if gameId in games:
                 game = games[gameId]
@@ -36,15 +38,20 @@ def threaded_client(conn, p, gameId):
                 if not data:
                     break
                 else:
-                    if data == "reset":
+                    if data.reset is True:
                         game.reset()
-                    elif data != "get":
+                    elif data.player is not None:
+                        game.add_player(data.player)
+                    elif data.get is False and data.player is None:
                         game.play(p, data)
+                    elif data.get is True:
+                        conn.sendall(pickle.dumps(game))
 
-                    conn.sendall(pickle.dumps(game))
+
             else:
                 break
         except:
+            print("error here")
             break
 
     print("Lost connection")
@@ -52,10 +59,10 @@ def threaded_client(conn, p, gameId):
         del games[gameId]
         print("Closing Game", gameId)
     except:
+        print ("error here 1")
         pass
     idCount -= 1
     conn.close()
-
 
 
 while True:
@@ -64,16 +71,19 @@ while True:
 
     idCount += 1
     p = 0
-    gameId = (idCount - 1)//4
+    gameId = (idCount - 1) // 4
     if idCount % 4 == 1:
         games[gameId] = Game(gameId)
         print("Creating a new game...")
+        games[gameId].players_connected = 1
     elif idCount % 4 == 2:
         p = 1
+        games[gameId].players_connected = 2
     elif idCount % 4 == 3:
         p = 2
+        games[gameId].players_connected = 3
     else:
         p = 3
-        games[gameId].ready = True
+        games[gameId].players_connected = 4
 
     start_new_thread(threaded_client, (conn, p, gameId))

@@ -1,6 +1,6 @@
 import pygame
 
-bg = pygame.image.load("images/750x750bb.jpeg")
+bg = pygame.image.load("images/Activity_Board.jpeg")
 bg = pygame.transform.scale(bg, (500, 650))
 
 pawn1 = pygame.image.load("images/001-satellite dish.png")

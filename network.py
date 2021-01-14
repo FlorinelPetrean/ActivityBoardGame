@@ -26,3 +26,11 @@ class Network:
             return pickle.loads(self.client.recv(2048*2))
         except socket.error as e:
             print(e)
+
+    def send_object(self, data):
+        try:
+            data = pickle.dumps(data)
+            self.client.send(data)
+            return pickle.loads(self.client.recv(2048 * 2))
+        except socket.error as e:
+            print(e)

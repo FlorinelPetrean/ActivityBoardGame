@@ -4,8 +4,9 @@ import pygame
 class Game:
     def __init__(self, game_id):
         self.id = game_id
-        self.ready = False
-        self.player = [0, 1, 2, 3]
+        self.players_connected = 0
+        #self.player = [0, 1, 2, 3]
+        self.players = []
         self.team = [0, 1]
         self.team_position = [0, 0]
         self.prev_team_position = [0, 0]
@@ -13,8 +14,20 @@ class Game:
         self.timer = 60
         self.discord_server = ""
 
+    def add_player(self, p):
+        aux = self.players
+        if p not in aux:
+            aux.append(p)
+        self.players = aux
+
+    def get_players(self):
+        return self.players
+
     def connected(self):
-        return self.ready
+        if self.players_connected == 4:
+            return True
+        else:
+            return False
 
     def next_turn(self):
         self.turn = (self.turn + 1) % 4
