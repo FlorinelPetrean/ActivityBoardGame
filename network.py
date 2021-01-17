@@ -20,17 +20,10 @@ class Network:
         except:
             pass
 
-    def send(self, data):
+    def send(self, data, recv):
         try:
             self.client.send(str.encode(data))
-            return pickle.loads(self.client.recv(2048*2))
-        except socket.error as e:
-            print(e)
-
-    def send_object(self, data):
-        try:
-            data = pickle.dumps(data)
-            self.client.send(data)
-            return pickle.loads(self.client.recv(2048 * 2))
+            if recv is True:
+                return pickle.loads(self.client.recv(2048*2))
         except socket.error as e:
             print(e)

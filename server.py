@@ -1,3 +1,4 @@
+import json
 import socket
 import string
 from _thread import *
@@ -27,25 +28,28 @@ def threaded_client(conn, p, gameId):
     global idCount
     conn.send(str.encode(str(p)))
 
+    player_data = conn.recv(2048 * 2).decode()
+    [username, pawn_img, avatar_img] = player_data.split("|")
+    print("Received" + username + pawn_img + avatar_img)
+    if gameId in games:
+        games[gameId].add_player(Player(p, username, pawn_img, avatar_img))
+
     reply = ""
     while True:
         try:
-            data = pickle.loads(conn.recv(2048 * 3))
+            data = conn.recv(4096).decode()
 
             if gameId in games:
                 game = games[gameId]
-
                 if not data:
                     break
                 else:
-                    if data.reset is True:
+                    if data == "reset":
                         game.reset()
-                    elif data.player is not None:
-                        game.add_player(data.player)
-                    elif data.get is False and data.player is None:
+                    elif data != "get":
                         game.play(p, data)
-                    elif data.get is True:
-                        conn.sendall(pickle.dumps(game))
+
+                    conn.sendall(pickle.dumps(game))
 
 
             else:
@@ -59,7 +63,7 @@ def threaded_client(conn, p, gameId):
         del games[gameId]
         print("Closing Game", gameId)
     except:
-        print ("error here 1")
+        print("error here 1")
         pass
     idCount -= 1
     conn.close()

@@ -1,7 +1,6 @@
 import pygame
 
 
-
 class Pawn:
     def __init__(self, x, y, img):
         self.x = x
@@ -16,16 +15,16 @@ class Pawn:
 class Avatar:
     def __init__(self, player_id, img):
         if player_id == 0:
-            self.x = 610
+            self.x = 610 + 50
             self.y = 40
         elif player_id == 1:
-            self.x = 810
+            self.x = 810 + 50
             self.y = 40
         elif player_id == 2:
-            self.x = 610
+            self.x = 610 + 50
             self.y = 30 + 150 + 10
         elif player_id == 3:
-            self.x = 810
+            self.x = 810 + 50
             self.y = 30 + 150 + 10
         self.img = img
 
