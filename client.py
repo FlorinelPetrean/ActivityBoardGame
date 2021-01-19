@@ -9,10 +9,10 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 pygame.display.set_caption('Activity')
+font = pygame.font.SysFont('comicsans', 30)
 
 
 def draw_teams(screen):
-    font = pygame.font.SysFont('comicsans', 30)
     pygame.draw.rect(screen, (0, 255, 100), (500, 0, 550, 150), 0)
     pygame.draw.rect(screen, (0, 100, 255), (500, 150, 550, 150), 0)
     team0 = font.render("Team Green", True, (0, 0, 0))
@@ -35,28 +35,31 @@ def redrawWindow(screen, game_instance, board, player):
         avatar = pygame.transform.scale(avatar, (80, 80))
         pawn = pygame.image.load(p.pawn.img)
         pawn = pygame.transform.scale(pawn, (50, 50))
-        screen.blit(avatar, (p.avatar.x, p.avatar.y))
-        screen.blit(pawn, (p.pawn.x, p.pawn.y))
+        screen.blit(avatar, p.avatar.get_pos())
+        screen.blit(pawn, p.pawn.get_pos())
 
-        # font = pygame.font.SysFont('comicsans', 30)
-        # username = font.render(p.name, True, (0, 0, 0))
-        # if p.id == 0:
-        #     screen.blit(username, (650, 120))
-        # elif p.id == 1:
-        #     screen.blit(username, (850, 120))
-        # elif p.id == 2:
-        #     screen.blit(username, (650, 20 + 250))
-        # elif p.id == 3:
-        #     screen.blit(username, (850, 20 + 250))
-    guessButton.draw(screen, True)
+        username = font.render(p.name, True, (0, 0, 0))
+        if p.id == 0:
+            screen.blit(username, (650 + 20, 120))
+        elif p.id == 1:
+            screen.blit(username, (850 + 20, 120))
+        elif p.id == 2:
+            screen.blit(username, (650 + 20, 20 + 250))
+        elif p.id == 3:
+            screen.blit(username, (850 + 20, 20 + 250))
+
+    for btn in buttons:
+        btn.draw(screen, True)
+
     pygame.display.update()
 
 
 FPS = 60
 
 guessButton = Button((0, 255, 0), 520, 560, 150, 50, "You guessed!")
+readyButton = Button((255, 255, 255), 520 + 150 + 50, 560, 150, 50, "Ready")
 
-
+buttons = [guessButton, readyButton]
 
 
 
@@ -69,27 +72,27 @@ def main():
     username = "Florin"
     pawn_img = "images/001-satellite dish.png"
     avatar_img = "images/001-satellite dish.png"
-
-    player = Player(int(n.getP()), username, pawn_img, avatar_img)
+    p = n.getP()
+    player = Player(p , username, pawn_img, avatar_img)
     # n.send(json.dumps({"u": username, "p": pawn_img, "a": avatar_img}))
     n.send(username + "|" + pawn_img + "|" + avatar_img, False)
     board = Board(bg, deck)
 
     while running:
-        game_instance = n.send("get", True)  # get
 
         try:
-            pass
+            game_instance = n.send(" ", True)  # get
         except:
             print("Couldn't get game")
             break
 
         for event in pygame.event.get():
+            mouse_pos = pygame.mouse.get_pos()
             clock.tick(FPS)
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                pass
+                print("(" + str(mouse_pos[0]) + ", " + str(mouse_pos[1]) + "), ")
         redrawWindow(screen, game_instance, board, player)
 
 

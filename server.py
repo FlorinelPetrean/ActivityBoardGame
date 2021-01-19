@@ -1,12 +1,11 @@
 import json
 import socket
-import string
 from _thread import *
 import pickle
 from game import Game
 from player import Player
 
-server = "192.168.0.106"
+server = "192.168.1.127"
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,7 +45,7 @@ def threaded_client(conn, p, gameId):
                 else:
                     if data == "reset":
                         game.reset()
-                    elif data != "get":
+                    elif data == "play":
                         game.play(p, data)
 
                     conn.sendall(pickle.dumps(game))

@@ -29,6 +29,8 @@ class Game:
         else:
             return False
 
+
+
     def next_turn(self):
         self.turn = (self.turn + 1) % 4
 
