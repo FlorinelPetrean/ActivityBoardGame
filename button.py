@@ -23,20 +23,12 @@ class Button():
             win.blit(text, (
                 self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
 
-    def isOver(self, pos, color):
+    def isOver(self, pos):
         # Pos is the mouse position or a tuple of (x,y) coordinates
         if self.x < pos[0] < self.x + self.width:
             if self.y < pos[1] < self.y + self.height:
-                self.color = color
+                # self.color = color
                 return True
 
         return False
 
-    def click(self, pos, text):
-        x1 = pos[0]
-        y1 = pos[1]
-        if self.x <= x1 <= self.x + self.width and self.y <= y1 <= self.y + self.height:
-            self.text = text
-            return True
-        else:
-            return False

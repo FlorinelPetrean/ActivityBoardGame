@@ -4,8 +4,12 @@ from _thread import *
 import pickle
 from game import Game
 from player import Player
+from network import Network
 
-server = "192.168.1.127"
+h_name = socket.gethostname()
+IP_address = socket.gethostbyname(h_name)
+
+server = IP_address
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,34 +25,75 @@ print("Waiting for a connection, Server Started")
 connected = set()
 games = {}
 idCount = 0
+HEADERSIZE = 10
+
+
+def send_data(clientsocket, data):
+    data_to_send = pickle.dumps(data)
+    data_size = bytes(f'{len(data_to_send):<{10}}', "utf-8")
+    try:
+        clientsocket.send(data_size + data_to_send)
+
+    except socket.error as e:
+        print(e)
+
+
+def receive_data(sock):
+    global msglen
+    full_msg = b''
+    new_msg = True
+    while True:
+        msg = sock.recv(16)
+        if new_msg:
+            # msglen = int(msg[:HEADERSIZE])
+            # new_msg = False
+            try:
+                msglen = int(msg[:HEADERSIZE])
+                new_msg = False
+            except ValueError:
+                msglen = 0
+                new_msg = False
+
+        full_msg += msg
+
+        if len(full_msg) - HEADERSIZE == msglen:
+            data = pickle.loads(full_msg[HEADERSIZE:])
+            break
+
+    return data
 
 
 def threaded_client(conn, p, gameId):
     global idCount
     conn.send(str.encode(str(p)))
 
-    player_data = conn.recv(2048 * 2).decode()
-    [username, pawn_img, avatar_img] = player_data.split("|")
-    print("Received" + username + pawn_img + avatar_img)
-    if gameId in games:
-        games[gameId].add_player(Player(p, username, pawn_img, avatar_img))
-
     reply = ""
     while True:
         try:
-            data = conn.recv(4096).decode()
-
+            data = receive_data(conn)
+            data_args = data.split("|")
             if gameId in games:
                 game = games[gameId]
                 if not data:
                     break
                 else:
-                    if data == "reset":
-                        game.reset()
-                    elif data == "play":
-                        game.play(p, data)
+                    if data_args[0] == "addp":
+                        game.add_player(Player(p, data_args[1], data_args[2], data_args[3]))
 
-                    conn.sendall(pickle.dumps(game))
+                    elif data_args[0] == "play":
+                        print(data)
+                        if data_args[1] == "yes":
+                            game.play(True, int(data_args[2]), int(data_args[3]))
+                        else:
+                            game.play(False, int(data_args[2]), int(data_args[3]))
+
+                    elif data_args[0] == "ready":
+                        game.ready()
+
+                    elif data_args[0] == "reset":
+                        game.reset()
+
+                    send_data(conn, game)
 
 
             else:
