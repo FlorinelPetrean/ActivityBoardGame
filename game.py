@@ -1,6 +1,7 @@
 import pygame
 import random
 
+
 class Game:
     def __init__(self, game_id):
         self.id = game_id
@@ -8,8 +9,10 @@ class Game:
         self.players_ready = 0
         self.players = []
         self.turn = 0
+        self.timer_on = False
         self.timer = 60
         self.discord_server = ""
+
         self.index_deck1 = [i for i in range(10)]
         self.index_deck2 = [i for i in range(10)]
         self.index_deck3 = [i for i in range(10)]
@@ -17,6 +20,8 @@ class Game:
         random.shuffle(self.index_deck2)
         random.shuffle(self.index_deck3)
 
+    def switch_timer(self):
+        self.timer_on = not self.timer_on
 
     def add_player(self, p):
         aux = self.players
@@ -38,12 +43,6 @@ class Game:
 
     def next_turn(self):
         self.turn = (self.turn + 1) % 4
-
-    def update_timer(self):
-        if self.timer < 0:
-            self.timer = 0
-        else:
-            self.timer = self.timer - 1
 
     def active_player(self):
         if self.turn == 0:
@@ -82,3 +81,5 @@ class Game:
     def reset(self):
         self.turn = 0
         self.timer = 60
+        for p in self.players:
+            p.pawn.reset()

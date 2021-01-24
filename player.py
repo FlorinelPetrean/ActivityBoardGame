@@ -28,6 +28,10 @@ class Pawn:
             self.index = self.index - 1
         (self.x, self.y) = self.trail[self.index]
 
+    def reset(self):
+        self.index = 0
+        (self.x, self.y) = self.trail[self.index]
+
 
 class Avatar:
     def __init__(self, player_id, img):
@@ -59,3 +63,4 @@ class Player:
             self.team = 0
         else:
             self.team = 1
+        self.wants_takeback = False

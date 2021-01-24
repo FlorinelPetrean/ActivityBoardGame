@@ -10,6 +10,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 pygame.display.set_caption('Activity')
 font = pygame.font.SysFont('comicsans', 30)
+timer_font = pygame.font.SysFont('comicsans', 70)
 
 
 def draw_teams(screen):
@@ -48,8 +49,10 @@ def redraw_window(screen, game_instance, board, decks, player):
         elif p.id == 3:
             screen.blit(username, (850 + 20, 20 + 250))
 
-    if game_instance.active_player() == player:
+    if player == game_instance.active_player():
         decks.draw(screen)
+
+    screen.blit(timer_text, (260, 60))
 
     for btn in buttons:
         btn.draw(screen, True)
@@ -57,19 +60,26 @@ def redraw_window(screen, game_instance, board, decks, player):
     pygame.display.update()
 
 
-FPS = 60
-
 guess_button = Button((0, 255, 0), 520, 560, 150, 50, "You guessed!")
-ready_button = Button((255, 255, 255), 520 + 150 + 50, 560, 150, 50, "Ready")
+ready_button = Button((255, 255, 255), 520 + 150 + 10, 560, 150, 50, "Ready")
+takeback_button = Button((0, 255, 255), 520 + 300 + 20, 560, 150, 50, "Takeback")
+
 deck1_button = Button((0, 0, 0), 343, 429, 100, 150, "")
 deck2_button = Button((0, 0, 0), 219, 425, 100, 150, "")
 deck3_button = Button((0, 0, 0), 78, 427, 100, 150, "")
 deck_buttons = [deck1_button, deck2_button, deck3_button]
 
-buttons = [guess_button, ready_button]
+buttons = [guess_button, ready_button, takeback_button]
+
+FPS = 60
+
+timer_event = pygame.USEREVENT + 1
+pygame.time.set_timer(timer_event, 1000)
+timer_text = timer_font.render("60", True, (0, 0, 0))
 
 
 def main():
+    global timer_text
     running = True
     clock = pygame.time.Clock()
     n = Network()
@@ -78,13 +88,15 @@ def main():
     avatar_img = "images/pawn/001-satellite dish.png"
     p = int(n.getP())
     team = 0
-    nr_squares = 0
     if p == 2 or p == 3:
         team = 1
+
+    nr_squares = 0
+    timer = 60
     added_player = False
     card_flipped = False
     decks_shuffled = False
-
+    timer_on = False
     decks = Decks()
     board = Board(bg, decks)
 
@@ -92,17 +104,48 @@ def main():
 
         try:
             game_instance = n.send_data("get")  # get
-            if decks_shuffled is False:
-                decks.shuffle(game_instance.index_deck1, game_instance.index_deck2, game_instance.index_deck3)
-                decks_shuffled = True
         except:
             print("Couldn't get game")
             break
+        if decks_shuffled is False:
+            decks.shuffle(game_instance.index_deck1, game_instance.index_deck2, game_instance.index_deck3)
+            decks_shuffled = True
+        timer_on = game_instance.timer_on
+
+        if game_instance.winner() != -1:
+            winner_font = pygame.font.SysFont("comicsans", 90)
+            if game_instance.winner() == 0:
+                winner_text = winner_font.render("Team Green WON", True, (0, 255, 100))
+            else:
+                winner_text = winner_font.render("Team Blue WON", True, (0, 100, 255))
+            screen.blit(winner_text, (WIDTH / 2 - winner_text.get_width() / 2, HEIGHT / 2 - winner_text.get_height() / 2))
+            pygame.display.update()
+            pygame.time.delay(5000)
+            mesg = "reset"
+            n.send_data(mesg)
 
         for event in pygame.event.get():
             clock.tick(FPS)
             if event.type == pygame.QUIT:
                 running = False
+
+            if event.type == timer_event:
+                if timer_on is True:
+                    if timer > 0:
+                        timer = timer - 1
+                        timer_text = timer_font.render(str(timer), True, (0, 0, 0))
+                    else:
+                        timer = 0
+                        timer_text = timer_font.render("0", True, (0, 0, 0))
+                        card_flipped = False
+                        decks.choose_deck(0)
+                        mesg = "play|no|" + str(team) + "|" + "0"
+                        print(mesg)
+                        n.send_data(mesg)
+                else:
+                    timer = 60
+                    timer_text = timer_font.render(str(timer), True, (0, 0, 0))
+
             if event.type == pygame.MOUSEBUTTONDOWN:  # clicked on the screen
                 mouse_pos = pygame.mouse.get_pos()
                 print("(" + str(mouse_pos[0]) + ", " + str(mouse_pos[1]) + "), ")
@@ -112,10 +155,15 @@ def main():
                         mesg = "addp|" + username + "|" + pawn_img + "|" + avatar_img
                         print(mesg)
                         n.send_data(mesg)
-                    else:
+                    elif p == game_instance.active_player():
                         mesg = "ready|" + str(p)
                         print(mesg)
                         n.send_data(mesg)
+
+                if takeback_button.isOver(mouse_pos):
+                    mesg = "takeback|" + str(p)
+                    print(mesg)
+                    n.send_data(mesg)
 
                 if p == game_instance.active_player():
 
@@ -132,8 +180,9 @@ def main():
                         nr_squares = 3
                         decks.choose_deck(3)
 
-                    if guess_button.isOver(mouse_pos) and card_flipped is True:
+                    if guess_button.isOver(mouse_pos) and card_flipped is True and timer_on:
                         card_flipped = False
+                        decks.choose_deck(0)
                         mesg = "play|yes|" + str(team) + "|" + str(nr_squares)
                         print(mesg)
                         n.send_data(mesg)

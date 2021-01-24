@@ -81,14 +81,26 @@ def threaded_client(conn, p, gameId):
                         game.add_player(Player(p, data_args[1], data_args[2], data_args[3]))
 
                     elif data_args[0] == "play":
-                        print(data)
                         if data_args[1] == "yes":
                             game.play(True, int(data_args[2]), int(data_args[3]))
                         else:
                             game.play(False, int(data_args[2]), int(data_args[3]))
+                        game.timer_on = False
+
+                    elif data_args[0] == "takeback":
+                        wants = [False, False, False, False]
+                        for player in game.get_players():
+                            if player.id == int(data_args[1]):
+                                player.wants_takeback = True
+                            if player.wants_takeback:
+                                wants[player.id] = True
+                        if wants[0] == True and wants[1] == True:
+                            game.turn_back(0)
+                        elif wants[2] == True and wants[3] == True:
+                            game.turn_back(1)
 
                     elif data_args[0] == "ready":
-                        game.ready()
+                        game.timer_on = True
 
                     elif data_args[0] == "reset":
                         game.reset()
