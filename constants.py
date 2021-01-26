@@ -8,6 +8,10 @@ pawn1 = pygame.transform.scale(pawn1, (50, 50))
 avatar1 = pygame.image.load("images/pawn/001-satellite dish.png")
 avatar1 = pygame.transform.scale(avatar1, (80, 80))
 
+
+avatars_pos = [(650, 20), (850, 20), (650, 20 + 150), (850, 20 + 150)]
+username_pos = [(650 + 20, 125), (850 + 20, 125), (650 + 20, 25 + 250), (850 + 20, 25 + 250)]
+
 deck1 = []
 deck2 = []
 deck3 = []
@@ -82,6 +86,9 @@ for pos in player0_trail:
     x = pos[0] + 40
     y = pos[1] + 40
     player3_trail.append((x, y))
+
+
+
 
 WIDTH = 1024
 HEIGHT = 650

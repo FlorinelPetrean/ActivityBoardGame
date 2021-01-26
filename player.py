@@ -1,5 +1,5 @@
 import pygame
-from constants import player0_trail, player1_trail, player2_trail, player3_trail
+from constants import player0_trail, player1_trail, player2_trail, player3_trail, avatars_pos
 
 
 class Pawn:
@@ -35,18 +35,7 @@ class Pawn:
 
 class Avatar:
     def __init__(self, player_id, img):
-        if player_id == 0:
-            self.x = 610 + 50
-            self.y = 40
-        elif player_id == 1:
-            self.x = 810 + 50
-            self.y = 40
-        elif player_id == 2:
-            self.x = 610 + 50
-            self.y = 30 + 150 + 10
-        elif player_id == 3:
-            self.x = 810 + 50
-            self.y = 30 + 150 + 10
+        (self.x, self.y) = avatars_pos[player_id]
         self.img = img
 
     def get_pos(self):

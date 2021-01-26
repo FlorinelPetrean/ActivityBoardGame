@@ -4,9 +4,9 @@ import pygame
 class Drawing_Board():
     def __init__(self):
         self.color = (255, 255, 255)
-        self.x = 500
-        self.y = 0
-        self.width = 524
+        self.x = 500 + 2
+        self.y = 0 + 2
+        self.width = 524 - 2
         self.height = 550
         self.last_pos = None
 

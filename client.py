@@ -1,5 +1,5 @@
 import pygame
-from constants import WIDTH, HEIGHT, bg
+from constants import WIDTH, HEIGHT, bg, username_pos, avatars_pos
 from board import Board
 from network import Network
 from button import Button
@@ -34,23 +34,19 @@ def redraw_window(screen, game_instance, board, decks, scribble_board, player):
     draw_teams(screen)
     for p in game_instance.get_players():
         avatar = pygame.image.load(p.avatar.img)
-        avatar = pygame.transform.scale(avatar, (80, 80))
+        avatar = pygame.transform.scale(avatar, (100, 100))
         pawn = pygame.image.load(p.pawn.img)
         pawn = pygame.transform.scale(pawn, (50, 50))
         screen.blit(avatar, p.avatar.get_pos())
         screen.blit(pawn, p.pawn.get_pos())
-
-        username = font.render(p.name, True, (0, 0, 0))
-        if p.id == 0:
-            screen.blit(username, (650 + 20, 125))
-        elif p.id == 1:
-            screen.blit(username, (850 + 20, 125))
-        elif p.id == 2:
-            screen.blit(username, (650 + 20, 25 + 250))
-        elif p.id == 3:
-            screen.blit(username, (850 + 20, 25 + 250))
+        if player == p.id:
+            username = font.render(p.name + "(You)", True, (0, 0, 0))
+        else:
+            username = font.render(p.name, True, (0, 0, 0))
+        screen.blit(username, username_pos[p.id])
 
     if player == game_instance.active_player():
+        pygame.draw.circle(screen, (255, 0, 0), avatars_pos[player], 10)
         decks.draw(screen)
 
     screen.blit(timer_text, (260, 60))
@@ -72,6 +68,9 @@ def redraw_window(screen, game_instance, board, decks, scribble_board, player):
                 if last_pos is not None:
                     scribble_board.draw_pixel1(screen, last_pos, pos)
                 last_pos = pos
+
+        if player == game_instance.active_player():
+            pygame.draw.circle(screen, (255, 0, 0), (520, 20), 15)
 
     pygame.display.update()
 
@@ -112,8 +111,7 @@ def main():
     added_player = False
     card_flipped = False
     decks_shuffled = False
-    timer_on = False
-    mouse_pressed = False
+
     decks = Decks()
     board = Board(bg, decks)
     scribble_board = Drawing_Board()
@@ -158,9 +156,10 @@ def main():
                         timer_text = timer_font.render("0", True, (0, 0, 0))
                         card_flipped = False
                         decks.choose_deck(0)
-                        mesg = "play|no|" + str(team) + "|" + "0"
-                        print(mesg)
-                        n.send_data(mesg)
+                        if p == game_instance.active_player():
+                            mesg = "play|no|" + str(team) + "|" + "0"
+                            print(mesg)
+                            n.send_data(mesg)
                 else:
                     timer = 60
                     timer_text = timer_font.render(str(timer), True, (0, 0, 0))
@@ -181,7 +180,6 @@ def main():
                         and game_instance.on_scribble_squares() and game_instance.timer_on:
                     if scribble_board.isOver(mouse_pos):
                         mesg = "scribble|" + str(mouse_pos[0]) + "|" + str(mouse_pos[1])
-                        print(mesg)
                         n.send_data(mesg)
 
             if event.type == pygame.MOUSEBUTTONDOWN:  # clicked on the screen

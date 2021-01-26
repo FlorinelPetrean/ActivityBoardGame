@@ -52,7 +52,6 @@ class Game:
         self.players_ready = self.players_ready + 1
 
     def next_turn(self):
-        self.scribble_pixels = []
         self.turn = (self.turn + 1) % 4
 
     def active_player(self):
