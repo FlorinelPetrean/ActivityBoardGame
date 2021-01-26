@@ -4,6 +4,7 @@ from board import Board
 from network import Network
 from button import Button
 from decks import Decks
+from drawing_board import Drawing_Board
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -27,7 +28,7 @@ def draw_teams(screen):
     pygame.draw.rect(screen, (255, 255, 255), (850, 20 + 150, 100, 100), 0)  # 3
 
 
-def redraw_window(screen, game_instance, board, decks, player):
+def redraw_window(screen, game_instance, board, decks, scribble_board, player):
     screen.fill((255, 255, 0))
     board.draw(screen)
     draw_teams(screen)
@@ -41,13 +42,13 @@ def redraw_window(screen, game_instance, board, decks, player):
 
         username = font.render(p.name, True, (0, 0, 0))
         if p.id == 0:
-            screen.blit(username, (650 + 20, 120))
+            screen.blit(username, (650 + 20, 125))
         elif p.id == 1:
-            screen.blit(username, (850 + 20, 120))
+            screen.blit(username, (850 + 20, 125))
         elif p.id == 2:
-            screen.blit(username, (650 + 20, 20 + 250))
+            screen.blit(username, (650 + 20, 25 + 250))
         elif p.id == 3:
-            screen.blit(username, (850 + 20, 20 + 250))
+            screen.blit(username, (850 + 20, 25 + 250))
 
     if player == game_instance.active_player():
         decks.draw(screen)
@@ -56,6 +57,21 @@ def redraw_window(screen, game_instance, board, decks, player):
 
     for btn in buttons:
         btn.draw(screen, True)
+
+    if game_instance.on_scribble_squares():
+        scribble_board.draw(screen, True)
+        last_pos = None
+        for pos in game_instance.scribble_pixels:
+            if last_pos is not None:
+                scribble_board.draw_pixel1(screen, last_pos, pos)
+            last_pos = pos
+
+        for lines in game_instance.drawn_lines:
+            last_pos = None
+            for pos in lines:
+                if last_pos is not None:
+                    scribble_board.draw_pixel1(screen, last_pos, pos)
+                last_pos = pos
 
     pygame.display.update()
 
@@ -97,8 +113,10 @@ def main():
     card_flipped = False
     decks_shuffled = False
     timer_on = False
+    mouse_pressed = False
     decks = Decks()
     board = Board(bg, decks)
+    scribble_board = Drawing_Board()
 
     while running:
 
@@ -115,10 +133,11 @@ def main():
         if game_instance.winner() != -1:
             winner_font = pygame.font.SysFont("comicsans", 90)
             if game_instance.winner() == 0:
-                winner_text = winner_font.render("Team Green WON", True, (0, 255, 100))
+                winner_text = winner_font.render("Team Green WON", True, (0, 0, 0))
             else:
-                winner_text = winner_font.render("Team Blue WON", True, (0, 100, 255))
-            screen.blit(winner_text, (WIDTH / 2 - winner_text.get_width() / 2, HEIGHT / 2 - winner_text.get_height() / 2))
+                winner_text = winner_font.render("Team Blue WON", True, (0, 0, 0))
+            screen.blit(winner_text,
+                        (WIDTH / 2 - winner_text.get_width() / 2, HEIGHT / 2 - winner_text.get_height() / 2))
             pygame.display.update()
             pygame.time.delay(5000)
             mesg = "reset"
@@ -146,6 +165,25 @@ def main():
                     timer = 60
                     timer_text = timer_font.render(str(timer), True, (0, 0, 0))
 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    mesg = "scribble|reset"
+                    n.send_data(mesg)
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                mesg = "scribble|stop"
+                n.send_data(mesg)
+
+            if event.type == pygame.MOUSEMOTION:
+                mouse_pos = pygame.mouse.get_pos()
+                # print("(" + str(mouse_pos[0]) + ", " + str(mouse_pos[1]) + "), ")
+                if event.buttons[0] and p == game_instance.active_player() \
+                        and game_instance.on_scribble_squares() and game_instance.timer_on:
+                    if scribble_board.isOver(mouse_pos):
+                        mesg = "scribble|" + str(mouse_pos[0]) + "|" + str(mouse_pos[1])
+                        print(mesg)
+                        n.send_data(mesg)
+
             if event.type == pygame.MOUSEBUTTONDOWN:  # clicked on the screen
                 mouse_pos = pygame.mouse.get_pos()
                 print("(" + str(mouse_pos[0]) + ", " + str(mouse_pos[1]) + "), ")
@@ -155,7 +193,7 @@ def main():
                         mesg = "addp|" + username + "|" + pawn_img + "|" + avatar_img
                         print(mesg)
                         n.send_data(mesg)
-                    elif p == game_instance.active_player():
+                    elif p == game_instance.active_player() and card_flipped is True:
                         mesg = "ready|" + str(p)
                         print(mesg)
                         n.send_data(mesg)
@@ -165,6 +203,7 @@ def main():
                     print(mesg)
                     n.send_data(mesg)
 
+                # actions available only to the active player
                 if p == game_instance.active_player():
 
                     if deck1_button.isOver(mouse_pos) and card_flipped is False:
@@ -187,7 +226,7 @@ def main():
                         print(mesg)
                         n.send_data(mesg)
 
-        redraw_window(screen, game_instance, board, decks, p)
+        redraw_window(screen, game_instance, board, decks, scribble_board, p)
 
 
 main()

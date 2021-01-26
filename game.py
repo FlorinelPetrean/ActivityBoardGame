@@ -4,6 +4,7 @@ import random
 
 class Game:
     def __init__(self, game_id):
+        #for game logic
         self.id = game_id
         self.players_connected = 0
         self.players_ready = 0
@@ -11,14 +12,23 @@ class Game:
         self.turn = 0
         self.timer_on = False
         self.timer = 60
+
         self.discord_server = ""
 
+        #for deck shuffling
         self.index_deck1 = [i for i in range(10)]
         self.index_deck2 = [i for i in range(10)]
         self.index_deck3 = [i for i in range(10)]
         random.shuffle(self.index_deck1)
         random.shuffle(self.index_deck2)
         random.shuffle(self.index_deck3)
+
+        #for scribbling on board
+        self.scribble_pixels = []
+        self.drawn_lines = []
+
+    def add_pixel(self, pos):
+        self.scribble_pixels.append(pos)
 
     def switch_timer(self):
         self.timer_on = not self.timer_on
@@ -42,6 +52,7 @@ class Game:
         self.players_ready = self.players_ready + 1
 
     def next_turn(self):
+        self.scribble_pixels = []
         self.turn = (self.turn + 1) % 4
 
     def active_player(self):
@@ -77,9 +88,21 @@ class Game:
         for p in self.players:
             if p.team == team:
                 p.pawn.takeback()
+                p.wants_takeback = False
+
+    def on_scribble_squares(self):
+        scribble_squares = [1, 3, 7, 9, 10, 13, 20]
+        for p in self.players:
+            if p.pawn.index in scribble_squares and self.active_player() == p.id:
+                return True
+        return False
 
     def reset(self):
         self.turn = 0
         self.timer = 60
         for p in self.players:
             p.pawn.reset()
+
+
+
+

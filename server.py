@@ -99,6 +99,17 @@ def threaded_client(conn, p, gameId):
                         elif wants[2] == True and wants[3] == True:
                             game.turn_back(1)
 
+                    elif data_args[0] == "scribble":
+                        if data_args[1] == "stop":
+                            game.drawn_lines.append(game.scribble_pixels)
+                            game.scribble_pixels = []
+                        elif data_args[1] == "reset":
+                            game.scribble_pixels = []
+                            game.drawn_lines = []
+                        else:
+                            pos = (int(data_args[1]), int(data_args[2]))
+                            game.add_pixel(pos)
+
                     elif data_args[0] == "ready":
                         game.timer_on = True
 
